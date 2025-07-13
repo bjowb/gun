@@ -114,6 +114,22 @@ void abAppend(struct abuf *ab,const char *s,int len){
 
 
 /***            input              ***/
+void editorMoveCursor(char key){
+    switch(key){
+        case 'a':
+            if (E.cx > 0) E.cx--;
+            break;
+        case 's':
+            if (E.cy < E.screenrows - 1) E.cy++;
+            break;
+        case 'd':
+            if (E.cx < E.screencols - 1) E.cx++;
+            break;
+        case 'w':
+            if (E.cy > 0) E.cy--;
+            break;
+    }
+}
 
 void editorProcessKeyPress(){
     char c = editorReadKey();
@@ -124,8 +140,17 @@ void editorProcessKeyPress(){
             write(STDOUT_FILENO, "\x1b[H", 3);
             exit(0);
             break;
+
+        case 'w':
+        case 'a':
+        case 's':
+        case 'd':
+            editorMoveCursor(c);
+            break;
     }
+
 }
+
 
 
 /***            output              ***/
@@ -186,7 +211,11 @@ void editorRefreshScreen(){
     
     editorDrawRows(&ab);
 
-    abAppend(&ab,"\x1b[H",3);
+    char buf[32];
+    snprintf(buf,sizeof(buf),"\x1b[%d;%dH",E.cy+1,E.cx+1);
+    abAppend(&ab,buf,strlen(buf));
+
+    // abAppend(&ab,"\x1b[H",3);
     // write(STDOUT_FILENO,"\x1b[H",3);
 
     abAppend(&ab, "\x1b[?25h", 6);
