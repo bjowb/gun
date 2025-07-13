@@ -17,9 +17,11 @@
 
 /***            data            ***/
 
-struct termios orig;
+struct editorConfig{
+    struct termios orig;
+};
 
-
+struct editorConfig E;
 
 
 /***            terminal            ***/
@@ -30,18 +32,18 @@ void die(const char *s){
 }
 
 void disableRawMode(){
-    if(tcsetattr(STDIN_FILENO,TCSAFLUSH,&orig) == -1)
+    if(tcsetattr(STDIN_FILENO,TCSAFLUSH,&E.orig) == -1)
         die("tcsetattr");
 }
 
 void enableRawMode(){
     
-    if(tcgetattr(STDIN_FILENO,&orig) == -1)
+    if(tcgetattr(STDIN_FILENO,&E.orig) == -1)
         die("tcgetattr");
     atexit(disableRawMode);
 
 
-    struct termios raw = orig;
+    struct termios raw = E.orig;
     
     raw.c_iflag &= ~(IXON | ICRNL| INPCK | BRKINT | ISTRIP);
     raw.c_lflag &= ~(ECHO | ICANON | ISIG | IEXTEN);
@@ -84,9 +86,21 @@ void editorProcessKeyPress(){
 
 /***            output              ***/
 
+void editorDrawRows(){
+    int y;
+    for(y = 0;y < 24;y++){
+        write(STDOUT_FILENO,"~\r\n",3);
+    }
+}
+
+
 void editorRefreshScreen(){
     write(STDOUT_FILENO,"\x1b[2J",4);
-    write(STDOUT_FILENO, "\x1b[H", 3);   
+    write(STDOUT_FILENO, "\x1b[H", 3); 
+    
+    editorDrawRows();
+
+    write(STDOUT_FILENO,"\x1b[H",3);
 }
 
 
